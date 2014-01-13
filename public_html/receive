@@ -6,7 +6,6 @@ use LiteAPI;
 
 use CGI;
 use CGI::Carp qw(fatalsToBrowser);
-use Imager::QRCode;
 use JSON;
 use Digest::SHA qw(sha384_hex);
 use URI::Encode qw(uri_encode uri_decode);
