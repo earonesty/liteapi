@@ -54,7 +54,7 @@ for my $dest (keys(%send)) {
             $cb{dest}=$dest;
             $cb{prorate}=$prorate_pct;
             $cb{input}=$send{$dest}->{from};
-            print OUT to_json(\%cb);
+            print OUT to_json(\%cb), "\n";
         }
     }
 }
