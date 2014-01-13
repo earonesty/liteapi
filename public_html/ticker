@@ -1,0 +1,22 @@
+#!/usr/bin/perl -T
+
+use strict;
+
+use LiteAPI;
+
+use CGI;
+use CGI::Carp qw(fatalsToBrowser);
+use JSON;
+
+sub abort {
+# exit is not supported in mod_perl
+    goto DONE;
+}
+
+my $q = CGI->new;
+my %p = $q->Vars;
+
+my $t=LiteAPI::cache_ticker();
+
+print $q->header('application/json', -charset=>'UTF-8');
+print to_json($t);
