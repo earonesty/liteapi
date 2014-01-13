@@ -120,4 +120,39 @@ sub burp {
 }
 
 
+sub cache_ticker {
+    my $dat;
+    my $tick="$HOME/log/ticker";
+    if (((stat($tick))[9])<time()-30) {
+    # poor mans ticker...
+        my $ua = LWP::UserAgent->new;
+        $ua->timeout(10);
+        my $res=$ua->get("https://btc-e.com/api/2/ltc_btc/ticker");
+        my $btc;
+        if ($res->is_success) {
+            my $dat=from_json($res->decoded_content());
+            $btc=$dat->{ticker}->{sell};
+            if ($btc) {
+                my $res=$ua->get("https://blockchain.info/ticker");
+                if ($res->is_success) {
+                    $dat=from_json($res->decoded_content());
+                    for (keys(%$dat)) {
+                        $dat->{$_}->{"15m"}*=$btc;
+                        $dat->{$_}->{"24h"}*=$btc;
+                        $dat->{$_}->{buy}*=$btc;
+                        $dat->{$_}->{last}*=$btc;
+                        $dat->{$_}->{sell}*=$btc;
+                    }
+                    open(FILE, ">:encoding(UTF-8)", "$tick.$$");
+                    print FILE to_json($dat);
+                    close FILE;
+                    rename("$tick.$$", $tick);
+                    return $dat;
+                }
+            }
+        }
+    }
+    return from_json(slurp($tick,binmode => ':raw'));
+}
+
 # vim: noai:ts=4:sw=4
