@@ -10,6 +10,7 @@ HOME=/var/www/liteapi
 mkdir $HOME
 cd $HOME
 
+# this instead of git clone, to include settings, etc.
 rsync -a --exclude "**/coin/**" --exclude "**/log/**" $host:$HOME/ $HOME/ &
 
 yum -y update
