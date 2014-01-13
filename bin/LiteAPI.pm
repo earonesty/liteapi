@@ -12,7 +12,7 @@ use JSON;
 use JSON::RPC::Client;
 
 our $HOME="/var/www/liteapi";
-our $DBPW=slurp("$HOME/etc/dbpw");
+our $DBPW=slurp("$HOME/etc/dbpw"); chomp $DBPW;
 
 my $ua = LWP::UserAgent->new;
 $ua->timeout(10);
