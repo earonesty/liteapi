@@ -1,0 +1,132 @@
+#!/usr/bin/perl
+
+use strict;
+
+use LiteAPI;
+
+use CGI;
+use CGI::Carp qw(fatalsToBrowser);
+use Imager::QRCode;
+use JSON;
+use Digest::SHA qw(sha384_hex);
+use URI::Encode qw(uri_encode uri_decode);
+use Data::URIEncode qw(complex_to_query);
+use Regexp::Common qw /URI/;
+
+sub abort {
+# exit is not supported in mod_perl
+    goto DONE;
+}
+
+sub Dumper {
+	return to_json($_[0],{pretty=>1,canonical=>1});
+}
+
+my $q = CGI->new;
+my %p = $q->Vars;
+
+use DBI;
+my $db = DBI->connect("DBI:Pg:dbname=lite;host=127.0.0.1", "lite", "9i8u7y6", {'RaiseError' => 1});
+
+my %r;
+$r{param}=\%p;
+
+valid("method", in=>["create"]);
+valid("address");
+valid("callback");
+
+if ($p{callback} !~ /$RE{URI}{HTTP}{-scheme=>'https'}/) {
+    error("Callback must be a valid https:// url");
+};
+
+if (!LiteAPI::litevalidaddr($p{address})) {
+    error("Invalid litecoin address");
+}
+
+my %r;
+
+$p{fee}=.001 if (!defined($r{fee}));
+$r{fee}=$p{fee};
+
+$r{destination}=$p{address};
+$r{callback_url}=$p{callback};
+
+valid("verify_ssl", okempty=>1,in=>["true", "false", "1", "0"]);
+
+$p{verify_ssl} = 0 if $p{verify_ssl} =~ /^false$/i;
+$p{verify_ssl} = $p{verify_ssl} ? 1 : 0;
+
+$r{verify_ssl}=$p{verify_ssl};
+
+valid("donation",  gt=>0, okempty=>1);
+valid("min_forward",  gt=>0, okempty=>1);
+
+$r{donation}=$p{donation}+0;
+
+eval {
+    $r{input_address}=LiteAPI::litenewaddr();
+    $db->do("insert into monitor (input, dest, cburl, fee, min_forward, donate, verify_ssl) values (?, ?, ?, ?, ?, ?, ?)", undef,  
+            $r{input_address}, $p{address}, $p{callback}, $p{fee}+0, $p{min_forward}+0, $p{donation}+0,$p{verify_ssl}+0);
+    reply();
+};
+
+if ($@) {
+    error("Error during update");
+    warn $@;
+} else {
+    error("Unhandled reply");
+}
+
+# this construct is needed because EXIT is not supported
+DONE:
+0;
+
+# goto
+#
+sub reply {
+    print $q->header('application/json');
+	print to_json(\%r, {pretty=>1,canonical=>1}), "\n";
+	abort(0);
+}
+
+sub valid {
+	my ($name, %op) = @_;
+
+	if (!$p{$name} && $q->url_param($name)) {
+		$p{$name}=$q->url_param($name);
+	}
+	
+	if (!$p{$name}) {
+	    if (!$op{okempty}) {
+    		error( "'$name' is required.  See liteapi.org/api.html");
+        } else {
+            return;
+        }
+	}
+	if ($op{in}) {
+		if (! grep {$_ eq $p{$name} } @{$op{in}} ) {
+			my $in = join ',', @{$op{in}};
+			error( "'$name' must be in $in.  See liteapi.org/api.html");
+		}
+	}
+	if ($op{gt}) {
+		if ($p{$name} < $op{gt}) {
+			error( "'$name' must be at least $op{gt}");
+		}		
+	}
+	if ($op{eq}) {
+        if (!($p{$name} eq $op{eq})) {
+                error( "'$name' invalid");
+        }
+	}
+}
+
+sub error {
+	my ($msg) = @_;
+    print $q->header('text/plain','500 Error');
+	print "Error Generating Receiving Address\n";
+    print "Message: $msg\n" if $msg;
+    abort(0);
+}
+
+# vim: noai:ts=4:sw=4
