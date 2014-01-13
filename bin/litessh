@@ -1,0 +1,11 @@
+#!/bin/bash
+
+HOME=/var/www/liteapi
+pwd=`pwd`
+for x in `cat $HOME/etc/apihosts`; do 
+(
+    host=$x
+    ssh $x "cd $pwd && $@" 2>&1 | perl -pe "s/^/$host\t/"
+) &
+done
+wait
