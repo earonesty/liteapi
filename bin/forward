@@ -1,0 +1,62 @@
+#!/usr/bin/perl
+
+use LiteAPI;
+use JSON;
+
+my $db=litedb();
+
+# get all unspent transactions
+my $res=literpc({method=>"listunspent"});
+
+die "listunspent, error!" if !$res;
+exit 0 if !@$res;
+
+my $st=$db->prepare("select dest, fee, donate, min_forward from monitor where input=?");
+
+my %send;
+for my $tx (@$res) {
+    $st->execute($tx->{address});
+    my ($dest, $fee) = $st->fetchrow_array();
+    next unless $dest;
+    push @{$send{$dest}->{txin}}, {txid=>$tx->{txid}, vout=>$tx->{vout}, scriptPubKey=>$tx->{scriptPubKey}};
+    $send{$dest}->{amt}+=$tx->{amount};
+    $send{$dest}->{fee}=$fee+0;
+    $send{$dest}->{donate}=$donate+0;
+    push @{$send{$dest}->{from}}, {addr=>$tx->{address}, amt=>$tx->{amount}};
+}
+
+open OUT, ">>$HOME/log/dbx.log" or die "Can't open callback dbx.log\n";
+select OUT;
+$|=1;
+select STDOUT;
+
+for my $dest (keys(%send)) {
+    next unless $send{$dest}->{amt} > $send{$dest}->{min_forward};
+    my $fee = $send{$dest}->{fee};
+    my $send_amt = $send{$dest}->{amt}-$fee;
+    my $prorate_pct = $send_amt/$send{$dest}->{amt};
+    my $raw = literpc({method=>"createrawtransaction", params=>[$send{$dest}->{txin},{$dest=>$send_amt}]});
+    my $out = literpc({method=>"signrawtransaction", params=>[$raw,$send{$dest}->{txin}]});
+    if($out->{complete}) {
+        my $res=literpc({method=>"sendrawtransaction", params=>[$out->{hex}]});
+        eval {
+            $db->begin_work;
+            for (@{$send{$dest}->{from}}) {
+                $db->do("insert into cbs (txid, utime, input, amount, state) values (?, ?, ?, ?, 0)", undef, $res, time(), $_->{addr}, $prorate_pct * $_->{amt});
+            }
+            $db->commit;
+        };
+ 
+        if ($@) {
+            warn "Forward DB: error $@\n"; 
+            $cb{txid}=$res;
+            $cb{utime}=time();
+            $cb{dest}=$dest;
+            $cb{prorate}=$prorate_pct;
+            $cb{input}=$send{$dest}->{from};
+            print OUT to_json(\%cb);
+        }
+    }
+}
+
+close OUT;

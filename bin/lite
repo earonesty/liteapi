@@ -1,0 +1,8 @@
+#!/bin/bash
+
+HOME=`dirname $0`/..
+cd $HOME
+
+if [ -n "$1" ]; then
+	litecoind -datadir=coin -conf=lite.conf -pid=etc/lite.pid "$@"
+fi

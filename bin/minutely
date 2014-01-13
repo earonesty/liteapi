@@ -1,0 +1,13 @@
+#!/bin/bash
+
+cd /var/www/liteapi
+exec >> log/minutely.log 2>&1
+
+bin/lite getinfo > etc/lite.info 2>&1
+
+# this could be moved to the "onblock" callback from the dameon... but whatever for now
+
+bin/forward             # forward transactions, add to db
+bin/callback            # hit some urls
+bin/loadlog             # in case db was down, load from log
+bin/repair              # in case log didn't work, use the blockchain

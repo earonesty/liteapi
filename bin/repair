@@ -1,0 +1,94 @@
+#!/usr/bin/perl
+
+use LiteAPI;
+use Data::URIEncode qw(complex_to_query);
+use JSON;
+use Getopt::Long;
+use Digest::MD5 qw(md5_hex);
+use File::Slurp qw(slurp);
+
+my $debug;
+GetOptions("debug"=>\$debug);
+
+my $db=litedb();
+
+my $ua = LWP::UserAgent->new;
+$ua->timeout(10);
+
+my ($timer, $lhash);
+
+my $lasthashfile="$HOME/etc/repair.last";
+my $lastblock=slurp($lasthashfile, err_mode=>'quiet');
+my $res=literpc({method=>"listsinceblock", params=>["$lastblock"]});
+
+# validate return
+die if !ref($res) eq 'HASH';
+die if !ref($res->{transactions}) eq 'ARRAY';
+
+my $txs=$res->{transactions};
+my @txs = sort {$a->{timereceived} <=> $b->{timereceived}} @$txs;
+
+sub in;
+
+# load all new tx
+for my $tx (@txs) {
+    my $skip;
+    $skip = 1 if ! $tx->{blockhash};
+    $skip = 1 unless $tx->{category} eq 'send';
+    my $txid=$tx->{txid};
+    my $have=0;
+    ($have)=$db->selectrow_array("select txid from cbs where txid=?", undef, $txid) unless $skip;
+    if (!$skip && !$have) {
+        my $res=eval{literpc({method=>"getrawtransaction", params=>["$txid", 1]})};
+        next unless ref $res;
+        my @in;
+        for (@{$res->{vin}}) {
+            push @in, $_->{txid};
+        }
+        my %addr;
+        my $inamt;
+        for (@in) {
+            my $res=literpc({method=>"gettransaction", params=>["$_"]});
+            for (@{$res->{details}}) {
+                $addr{$_->{address}}+=$_->{amount};
+                $inamt+=$_->{amount};
+            }
+        }
+        my $outamt;
+        for (@{$res->{vout}}) {
+            next unless in($tx->{address},$_->{scriptPubKey}->{addresses})>=0;
+            $outamt+=$_->{value};
+        }
+        my $prime;
+        for (keys(%addr)) {
+            if ($addr{$_} eq $outamt) {
+                $prime=$_;
+                last;
+            }
+        }
+        if ($prime) {
+            %addr = ($prime=>$addr{$prime});
+        }
+        if (!$prime) { 
+            die Dumper $res if keys(%addr)>1;
+        }
+        $db->begin_work;
+        for (keys(%addr)) {
+            my $prorate=$addr{$_}*($tx->{amount}/$outamt);
+            $db->do("insert into cbs (txid, utime, input, amount, conf, state) values (?, ?, ?, ?, ?, ?)", undef, $txid, $tx->{timereceived}, $_, $prorate, $tx->{confirmations}, 0);
+        }
+        $db->commit;
+    }
+    # only gets here if db is up
+    burp($lasthashfile,$tx->{blockhash}); 
+}
+
+sub in {
+    my ($k, $a) = @_;
+    my $i=0;
+    for (@$a) {
+        return $i if $_ eq $k;
+    }
+    return -1;
+}
+

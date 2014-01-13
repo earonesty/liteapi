@@ -1,0 +1,6 @@
+#!/bin/bash
+if [ -n "$1" ]; then
+sudo -u lite psql lite -c "$@"
+else
+sudo -u lite psql lite
+fi

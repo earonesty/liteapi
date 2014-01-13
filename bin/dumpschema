@@ -1,0 +1,4 @@
+#!/bin/bash
+
+sudo -u postgres pg_dumpall -g > bin/user.sql
+sudo -u postgres pg_dump lite --schema-only > bin/lite.sql

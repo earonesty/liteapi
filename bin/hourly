@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cd /var/www/liteapi
+exec >> log/hourly.log 2>&1
+bin/start-lite

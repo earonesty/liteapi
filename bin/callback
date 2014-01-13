@@ -1,0 +1,84 @@
+#!/usr/bin/perl
+
+use strict;
+
+use LiteAPI;
+use Data::URIEncode qw(complex_to_query);
+use JSON;
+use Getopt::Long;
+use Digest::MD5 qw(md5_hex);
+
+my $debug;
+GetOptions("debug"=>\$debug);
+
+my $db=litedb();
+
+my $ua = LWP::UserAgent->new;
+$ua->timeout(10);
+
+my $res=$db->prepare("select txid, utime, cbs.input, amount, monitor.dest, conf, cburl from cbs inner join monitor on cbs.input=monitor.input where state=0");
+$res->execute();
+
+while ($_=$res->fetchrow_arrayref()) {
+    my ($txid, $timer, $input, $amt, $dest, $conf, $cburl) = @$_;
+    if ($conf < 60) {
+        my $res=literpc({method=>"gettransaction", params=>["$txid"]});
+        if ($res->{confirmations}>$conf) {
+            $conf=$res->{confirmations};
+            $db->do("update cbs set conf=? where txid=?", undef, $conf, $txid); 
+        };
+    }
+   
+    my %cb; 
+    $cb{value}=abs($amt)*100000000;
+    $cb{value_ltc}=abs($amt);
+    $cb{input_address}=$input;
+    $cb{confirmations}=$conf;
+    $cb{transaction_hash}=$txid;
+    $cb{time_sent}=$timer;
+    $cb{destination_address}=$dest;
+
+
+    my $orig_url=$cburl;
+
+    $cburl .= "&" if $cburl =~ /\?/;
+    $cburl .= "?" if $cburl !~ /\?/;
+    $cburl .= complex_to_query(\%cb);
+
+    my $res=$ua->get("$cburl");
+
+    if (!$res->is_error) {
+        if ($res->decoded_content=~ /\*ok\*/) {
+            $db->do("update cbs set state=1 where txid=? and input=?", undef, $txid, $input);
+        }
+    }
+    xlog($orig_url, complex_to_query(\%cb), $res->code, $res->decoded_content);
+}
+
+sub xlog {
+    my ($url, $params, $code, $content) = @_;
+    my $digest = md5_hex($url);
+    my $fil = "$HOME/log/cb";
+    mkdir $fil;
+    $fil .= "/" . substr($digest,0,2);
+    mkdir $fil;
+    $fil .= "/" . substr($digest,2);
+    open LOG, ">$fil";
+    $content=~s/\s+/ /g;
+    $content=substr($content,100);
+    print LOG time(), "\t", $params, "\t", $code, "\t", $content, "\n";
+    close LOG;
+    if ($debug) {
+        warn "url: $url, input: $params, code: $code, content: $content\n";
+    }
+}
+
+sub in {
+    my ($k, $a) = @_;
+    my $i=0;
+    for (@$a) {
+        return $i if $_ eq $k;
+    }
+    return -1;
+}
+

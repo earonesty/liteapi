@@ -1,0 +1,22 @@
+#!/usr/bin/perl
+
+use strict;
+use LiteAPI;
+use JSON;
+
+# {"prorate":0.99,"input":[{"addr":"LUuHafR8rRxzErRVh7Vb7HxPV957ZUWSGF","amt":0.1}],"dest":"LfhypUihHE89uL3A7nKncHVoQBDLujCiSE","txid":"4750c86623238fb728f41df09af5b2bcff29ff73789777ebe8178fbebc9239cf","utime":1389589501}
+
+my $db=litedb();
+
+open IN, "$HOME/log/dbx.log";
+while (<IN>) {
+    my $dat=from_json($_);
+    my $prorate_pct=$dat->{prorate};
+    my $txid=$dat->{txid};
+    my $utime=$dat->{utime};
+    $db->begin_work;
+    for (@{$dat->{input}}) {
+        $db->do("insert into cbs (txid, utime, input, amount, state) values (?, ?, ?, ?, 0)", undef, $txid, time(), $_->{addr}, $prorate_pct * $_->{amt});
+    }
+    $db->commit;
+}
