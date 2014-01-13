@@ -47,7 +47,7 @@ cp src/litecoin-0.8.6.2/src/litecoind /usr/local/bin/litecoind
 chkconfig postgresql on
 chkconfig httpd on
 
-ln -fs $HOME/LiteAPI.pm /usr/share/perl5/
+ln -fs $HOME/bin/LiteAPI.pm /usr/share/perl5/
 cp etc/liteapi.crt /etc/pki/tls/certs/liteapi.crt
 cp etc/liteapi.key /etc/pki/tls/private/liteapi.key
 
