@@ -17,10 +17,6 @@ sub abort {
     goto DONE;
 }
 
-sub Dumper {
-	return to_json($_[0],{pretty=>1,canonical=>1});
-}
-
 my $q = CGI->new;
 my %p = $q->Vars;
 
