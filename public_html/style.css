@@ -1,0 +1,8 @@
+body,p,h1,h2,h3,h4,table,td,th,ul,ol,textarea,input {
+        font-family:verdana,helvetica,arial,sans-serif;
+}
+h1 a {color: #AAA; }
+h3 a {color: #AAA; }
+a {color: #333; }
+h1,h3 { background-color: black; color: white; border-radius: 10px; padding-top:.25em; margin-bottom:.5em; padding-bottom:.25em; width: 20em;  text-align: center;}
+.code { border-radius: 10px; border: 5px solid gray; font-family: monospace; white-space: pre; margin-left: 3em; margin-right: 3em; }

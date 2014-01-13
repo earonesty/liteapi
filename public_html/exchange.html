@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Receive Payments API Documentation - liteapi.org</title>
+    <link rel="stylesheet" media="screen" href="/style.css">
+</head>
+<body>
+
+<h1><a href="/">LiteAPI</a> Exchange Documentation</h1>
+
+This API is designed to be compatible with the BlockChain.info Exchange Rate Feed.   This feed is delayed for no good reason other than the fact that blockchain's feed is delayed, and we're trying to be compatible.
+
+<h3>Ticker</h3>
+<p><b>URL:</b><a href="https://liteapi.org/ticker">https://liteapi.org/ticker</a></p>
+<p><b>No Parameters</b></p>
+
+RESPONSE:
+<div class=code>{
+"NZD":{"symbol":"$","15m":31.630040113,"last":31.630040113,"24h":33.066705,"sell":32.669659729,"buy":30.951696384},
+"HKD":{"symbol":"$","15m":201.655620775,"last":201.655620775,"24h":201.655671,"sell":208.283660193,"buy":197.330876897},
+"CAD":{"symbol":"$","15m":28.7,"last":28.7,"24h":28.849527,"sell":29.210356602,"buy":27.9825},
+"DKK":{"symbol":"kr","15m":146.913175626,"last":146.913175626,"24h":145.978532,"sell":147.506667231,"buy":139.749896706},
+"CNY":{"symbol":"¥","15m":157.85,"last":157.85,"24h":162.286733,"sell":162.547717598,"buy":157.85},
+"EUR":{"symbol":"â","15m":19.687913,"last":19.687913,"24h":19.476107,"sell":19.687913,"buy":19.114200287},
+"SGD":{"symbol":"$","15m":33.021856371,"last":33.021856371,"24h":34.682228,"sell":34.108729963,"buy":32.455487988},
+"CHF":{"symbol":"CHF","15m":23.534,"last":23.534,"24h":23.830184,"sell":24.39698317,"buy":23.114046102},
+"USD":{"symbol":"$","15m":23.3044,"last":23.3044,"24h":0,"sell":23.3044,"buy":23.274839},
+"GBP":{"symbol":"£","15m":15.979641965,"last":15.979641965,"24h":16.207751,"sell":15.979641965,"buy":15.705188457},
+"AUD":{"symbol":"$","15m":30.139930373,"last":30.139930373,"24h":30.403345,"sell":30.175008087,"buy":28.7287},
+"THB":{"symbol":"฿","15m":859.869350585,"last":859.869350585,"24h":859.86922,"sell":888.131631961,"buy":849.158099888},
+"PLN":{"symbol":"zÅ","15m":82.5699,"last":82.5699,"24h":81.535552,"sell":82.527114901,"buy":78.925},
+"RUB":{"symbol":"RUB","15m":861,"last":861,"24h":893.879007,"sell":892.436982101,"buy":845.507381824},
+"SEK":{"symbol":"kr","15m":175.8110053,"last":175.8110053,"24h":175.972615,"sell":175.5744599,"buy":166.46},
+"JPY":{"symbol":"¥","15m":2755.1426,"last":2755.1426,"24h":2750.411979,"sell":2755.1713,"buy":2671.9464947}}</div>
+
+
+
+<h3>ToLTC</h3>
+<p><b>URL:</b><a href="https://liteapi.org/toltc">https://liteapi.org/totlc</a></p>
+<p><b>Parameters</b></p>
+<ul>
+<li>currency - A currency code
+<li>value - Value to convert
+</ul>
+
+Returns the value in LTC.
+<div class=code>23.53</div>
+
+</body>
+</html>
