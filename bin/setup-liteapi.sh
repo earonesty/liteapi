@@ -16,8 +16,10 @@ yum -y update
 
 yum -y install bind-utils cpan
 yum -y install httpd httpd-devel mod_ssl mod_perl php boost
-yum -y install 'perl(File::Slurp)' 'perl(JSON)' 'perl(Digest::SHA)' 'perl(IO::Socket::SSL)' 'perl(DBI)'  'perl(URI)' 'perl(LWP::UserAgent)' 'perl(Test::Simple)' 'perl(CGI)' 'perl(parent)' 'perl(DBD::Pg)'
+yum -y install 'perl(File::Slurp)' 'perl(JSON)' 'perl(Digest::SHA)' 'perl(IO::Socket::SSL)' 'perl(DBI)'  'perl(URI)' 'perl(LWP::UserAgent)' 'perl(Test::Simple)' 'perl(CGI)' 'perl(parent)' 'perl(DBD::Pg)' 'perl(Regexp::Common)'
 perl -MJSON::RPC::Client -e 1 2> /dev/null || cpan -i 'JSON::RPC::Client'
+perl -MURI::Encode -e 1 2> /dev/null || cpan -i 'URI::Encode'
+perl -MData::URIEncode -e 1 2> /dev/null || cpan -i 'Data::URIEncode'
 
 (crontab -l ; echo "* * * * * $HOME/bin/minutely")  |uniq - | crontab -
 (crontab -l ; echo "0 * * * * /var/www/liteapi/bin/hourly")  |uniq - | crontab -
