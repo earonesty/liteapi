@@ -1,3 +1,4 @@
+use File::Slurp qw(slurp);
 package LiteAPI;
 require Exporter;
 @ISA = qw(Exporter);
@@ -32,6 +33,17 @@ my @b58 = qw{
     a b c d e f g h i j k   m n o p q r s t u v w x y z
 };
 my %b58 = map { $b58[$_] => $_ } 0 .. 57;
+
+sub service_status {
+    my $stat=slurp("$HOME/etc/lite.status");
+    my %r;
+    for (split "\n", $stat) {
+        chomp;
+        next unless /([^:]+):(.*)/;
+        $r{$1}=$2;
+    }
+    return \%r;
+}
  
 sub unbase58 {
     use integer;
@@ -154,5 +166,7 @@ sub cache_ticker {
     }
     return from_json(slurp($tick,binmode => ':raw'));
 }
+
+1;
 
 # vim: noai:ts=4:sw=4
