@@ -136,7 +136,26 @@ $object = json_decode($response);
 echo 'So far we got : ' . $object-&gt;amount;
 </div>
 
-<h4>Test Form:</h4>
+<h4>Example Response: (JSON)</h4>
+<div class=code>
+{
+   "amount" : 0.59,
+   "count" : 1,
+   "time" : 1389451656,
+   "txs" : [
+      {
+         "amount" : 0.59,
+         "conf" : 928,
+         "dest" : "LfhypUihHE89uL3A7nKncHVoQBDLujCiSE",
+         "input" : "LUqSzey8TK1ABaqYPvWH7q8DT1S54gohPM",
+         "time" : 1389451656,
+         "txid" : "064ca42a0e1ecc8c4f4cdc241ed7f1bc3e606002b9081ae0a59eed26a446fc28"
+      }
+   ]
+}
+</div>
+
+<h4>Poll Test Form:</h4>
 <form class="cleft" action="https://liteapi.org/poll">
 <p><label for="callback">Callback</label> <input name=callback />
 <p><label></label> <input type="submit" value="Poll" />
@@ -144,9 +163,7 @@ echo 'So far we got : ' . $object-&gt;amount;
 
 
 <h3>Security</h3>
-The callback url should contain a secret key which is known only to the API user.  It should also be an https: url.  In this way no one can forge a callback.
-
-<h3>Receive Callbacks</h3>
+The callback url should contain a secret key which is known only to the API user.  It should also be an https: url.  In this way no one can forge a callback.Alternatively, you can poll for the results, and use a callback url beginning with poll:
 
 <h3>Currency Conversion</h3>
 
