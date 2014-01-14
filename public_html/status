@@ -1,0 +1,15 @@
+#!/usr/bin/perl -T
+
+use strict;
+
+use LiteAPI;
+
+use CGI;
+use CGI::Carp qw(fatalsToBrowser);
+use JSON;
+
+my $q = CGI->new;
+
+my $stat=LiteAPI::service_status();
+print $q->header('application/json');
+print to_json($stat, {pretty=>1,canonical=>1}), "\n";
