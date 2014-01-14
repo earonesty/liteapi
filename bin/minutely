@@ -9,6 +9,8 @@ bin/lite getinfo > etc/lite.info 2>&1
 
 # simple status file shows current success codes for all minutely jobs 
 echo time:`date +%s` > etc/lite.status
+avail=`df . | perl -ne 'print $1 if /\S+\s+\d+\s+\S+\s+(\d+)/'`
+echo "avail:$avail" >> etc/lite.status
 bin/forward && echo forward:1 >> etc/lite.status             # forward transactions, add to db
 bin/callback && echo callback:1 >> etc/lite.status            # hit some urls
 bin/loadlog && echo loadlog:1 >> etc/lite.status             # in case db was down, load from log
