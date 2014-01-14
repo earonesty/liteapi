@@ -35,7 +35,7 @@ The minimum supported transaction size is 0.01 LTC.
 
 <p>Your application should support https:// (encrypted) urls.  You don't want someone intercepting, guessing secrets, etc.
 
-<p>POLLING SYNTAX: If you want to POLL for results, use a poll:// URL.   You will not receive any callbacks, but you can always poll for transactions (see below for polling, and why this is helpful).
+<p>POLLING SYNTAX: If you want to POLL for results, use a poll: URL (any valid url that begins with poll: will do).   You will not receive any callbacks, but you can always poll for transactions (see below for polling, and why this is helpful).
 
 <p> If min_forward is set, then transactions will "build up" until one is large enough to go out.   Otherwise every transaction will get forwarded (vin=vout).  If you're planning on getting lots of small confirmations, raise the network fee, because the transaction will be large.   
 
@@ -70,7 +70,7 @@ echo 'Send Payment To : ' . $object-&gt;input_address;
 <input name=method value=create type=hidden />
 <p><label for="address">Address</label> <input name=address />
 <p><label for="callback">Callback</label> <input name=callback />
-<p><label></label> <input type="submit" value="Generate" .>
+<p><label></label> <input type="submit" value="Generate" />
 </form>
 
 <h3>Receive Callbacks</h3>
@@ -123,7 +123,24 @@ if($database->queryExec($query, $error)) {
 
 <h3>Poll For Results</h3>
 
-<p>It's possible to query liteapi for a callback list, or simply query for the total address balance at any time.  In this way, it's possible to build a litecoin payment system entirely in javascript.
+<p>It's possible to query liteapi for a transaction list and amount sent.  In this way, it's possible to build a litecoin payment system entirely in javascript.
+
+<h4>PHP Example:</h4>
+<div class=code>$secret = 'ZzsMLGKe162CfA5EcG6j'
+$my_address = '1A8JiWcwvpY7tAopUkSnGuEYHmzGYfZPiq';
+$my_callback_url = 'https://mystore.com?invoice_id=058921123&amp;secret='.$secret;
+$root_url = 'https://liteapi.org/poll';
+$parameters = 'callback='. urlencode($my_callback_url) . '&amp;confirm=6';
+$response = file_get_contents($root_url . '?' . $parameters);
+$object = json_decode($response);
+echo 'So far we got : ' . $object-&gt;amount;
+</div>
+
+<h4>Test Form:</h4>
+<form class="cleft" action="https://liteapi.org/poll">
+<p><label for="callback">Callback</label> <input name=callback />
+<p><label></label> <input type="submit" value="Poll" />
+</form>
 
 
 <h3>Security</h3>
