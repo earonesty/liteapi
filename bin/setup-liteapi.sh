@@ -69,3 +69,6 @@ ln -fs $HOME/etc/mararc /etc/mararc
 perl -i -pe "s{\\d+\\.\\d+\\.\\d+\\.\\d+}{$primaryip}" etc/mararc
 perl -i -pe "s{\\d+\\.\\d+\\.\\d+\\.\\d+}{$primaryip}" etc/maradns/db.liteapi.org
 
+ln -fs $HOME/bin/litessh /usr/local/bin/
+ln -fs $HOME/bin/litesync /usr/local/bin/
+ln -fs $HOME/bin/litedb /usr/local/bin/
