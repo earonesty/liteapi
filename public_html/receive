@@ -46,6 +46,10 @@ $r{fee}=$p{fee};
 $r{destination}=$p{address};
 $r{callback_url}=$p{callback};
 
+if ($p{callback} =~ m{(https://\w*\.?(google|yahoo|ebay|chase|paypal|citibank).(com|net|org))|https?://(www.)?liteapi.org}) {
+    error("Invalid Callback Url");
+}
+
 valid("verify_ssl", okempty=>1,in=>["true", "false", "1", "0"]);
 
 $p{verify_ssl} = 0 if $p{verify_ssl} =~ /^false$/i;

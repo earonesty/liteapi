@@ -59,6 +59,14 @@ echo 'Send Payment To : ' . $object-&gt;input_address;
 }
 </div>
 
+<h4>Test Form:</h4>
+<form class="cleft" action="https://liteapi.org/receive">
+<input name=method value=create type=hidden />
+<p><label for="address">Address</label> <input name=address />
+<p><label for="callback">Callback</label> <input name=callback />
+<p><label></label> <input type="submit" value="Generate" .>
+</form>
+
 <h3>Receive Callbacks</h3>
 
 <p>When a payment is received, LiteAPI will immediately forward it to the destination address, unless min_forward is set.  The callback url will them be called with an http GET request. 
