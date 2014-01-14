@@ -1,0 +1,137 @@
+#!/usr/bin/perl -T
+
+use strict;
+
+use LiteAPI;
+
+use CGI;
+use CGI::Carp qw(fatalsToBrowser);
+use JSON;
+use Digest::SHA qw(sha384_hex);
+use URI::Encode qw(uri_encode uri_decode);
+use Data::URIEncode qw(complex_to_query);
+use Regexp::Common qw /URI/;
+
+my $q = CGI->new;
+my %p = $q->Vars;
+
+use DBI;
+my $db = litedb();
+
+valid("cburl");
+valid("confirm",  gt=>0, okempty=>1);
+
+
+my $res=$db->prepare("select txid, utime as utime, cbs.input, amount, monitor.dest, conf from cbs 
+    inner join monitor on cbs.input=monitor.input where cburl=?");
+
+$res->execute($p{cburl});
+
+my %r;
+
+while ($_=$res->fetchrow_arrayref()) {
+    my ($txid, $utime, $input, $amount, $dest, $conf) = @$_; 
+    if ($conf < 60) {
+        my $res=literpc({method=>"gettransaction", params=>["$txid"]});
+        if ($res->{confirmations}>$conf) {
+            $conf=$res->{confirmations};
+            $db->do("update cbs set conf=? where txid=?", undef, $conf, $txid);
+        };
+    }
+    next unless $conf >= $p{confirm};
+
+    push @{$r{txs}}, {
+        "txid"=>$txid,
+        "time"=>$utime,
+        "input"=>$input,
+        "amount"=>abs($amount),
+        "dest"=>$dest,
+        "conf"=>$conf,
+    }
+};
+
+my $tot=0;
+my $cnt=0;
+my $time;
+for (@{$r{txs}}) {
+    $tot+=$_->{amount};
+    $cnt+=1;
+    $time=$_->{time} if $_->{time}>$time;
+}
+$r{amount}=$tot;
+$r{time}=$time;
+$r{count}=$cnt;
+
+reply();
+
+if ($@) {
+    error("Error during update");
+    warn $@;
+} else {
+    error("Unhandled reply");
+}
+
+# goto
+#
+sub reply {
+    print $q->header('application/json');
+	print to_json(\%r, {pretty=>1,canonical=>1}), "\n";
+	abort(0);
+}
+
+sub valid {
+	my ($name, %op) = @_;
+
+	if (!$p{$name} && $q->url_param($name)) {
+		$p{$name}=$q->url_param($name);
+	}
+	
+	if (!$p{$name}) {
+	    if (!$op{okempty}) {
+    		error( "'$name' is required.  See liteapi.org/api.html");
+        } else {
+            return;
+        }
+	}
+	if ($op{bool}) {
+        valid($name, in=>["true","false","t","f","1","0"]);
+        $p{$name}=0 if $p{name}=~/false|f|0/;
+        $p{$name}=1 if $p{name}=~/true|1|1/;
+	}
+
+	if ($op{in}) {
+		if (! grep {$_ eq $p{$name} } @{$op{in}} ) {
+			my $in = join ',', @{$op{in}};
+			error( "'$name' must be in $in.  See liteapi.org/api.html");
+		}
+	}
+	if ($op{gt}) {
+		if ($p{$name} < $op{gt}) {
+			error( "'$name' must be at least $op{gt}");
+		}		
+	}
+	if ($op{eq}) {
+        if (!($p{$name} eq $op{eq})) {
+                error( "'$name' invalid");
+        }
+	}
+}
+
+sub abort {
+# exit is not supported in mod_perl
+    goto DONE;
+}
+
+sub error {
+	my ($msg) = @_;
+    print $q->header('text/plain','500 Error');
+	print "Error Generating Receiving Address\n";
+    print "Message: $msg\n" if $msg;
+    abort(0);
+}
+
+# this construct is needed because EXIT is not supported
+DONE:
+0;
+
+# vim: noai:ts=4:sw=4
