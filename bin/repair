@@ -75,9 +75,10 @@ for my $tx (@txs) {
         $db->begin_work;
         for (keys(%addr)) {
             my $prorate=$addr{$_}*($tx->{amount}/$outamt);
-            my ($callback) = $db->selectrow_array("select callback from monitor where input=?", undef, $input);
-            next if $callback=~/^poll:/;
-            $db->do("insert into cbs (txid, utime, input, amount, conf, state) values (?, ?, ?, ?, ?, ?)", undef, $txid, $tx->{timereceived}, $_, $prorate, $tx->{confirmations}, 0);
+            my ($callback) = $db->selectrow_array("select cburl from monitor where input=?", undef, $input);
+            my $state=0;
+            $state = 2 if $callback=~/^poll:/;
+            $db->do("insert into cbs (txid, utime, input, amount, conf, state) values (?, ?, ?, ?, ?, ?)", undef, $txid, $tx->{timereceived}, $_, $prorate, $tx->{confirmations}, $state);
         }
         $db->commit;
     }

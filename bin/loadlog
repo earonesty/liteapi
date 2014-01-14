@@ -8,7 +8,11 @@ use JSON;
 
 my $db=litedb();
 
-open IN, "$HOME/log/dbx.log";
+my $log="$HOME/log/dbx.load";
+if (! -s $log) {
+    rename "$HOME/log/dbx.log", "$HOME/log/dbx.load";
+}
+open IN, $log;
 while (<IN>) {
     my $dat=from_json($_);
     my $prorate_pct=$dat->{prorate};
@@ -16,8 +20,15 @@ while (<IN>) {
     my $utime=$dat->{utime};
     $db->begin_work;
     for (@{$dat->{input}}) {
-        next if $_->{callback} =~ /^poll:/;
-        $db->do("insert into cbs (txid, utime, input, amount, state) values (?, ?, ?, ?, 0)", undef, $txid, time(), $_->{addr}, $prorate_pct * $_->{amt});
+        my $state=0;
+        $state=2 if $_->{callback} =~ /^poll:/;
+        eval {
+            $db->do("insert into cbs (txid, utime, input, amount, state) values (?, ?, ?, ?, ?)", undef, $txid, time(), $_->{addr}, $prorate_pct * $_->{amt}, $state);
+        };
+        if($@ !~ /duplicate key/){
+            die $@;
+        }
     }
     $db->commit;
 }
+unlink $log;

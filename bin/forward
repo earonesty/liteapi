@@ -11,18 +11,18 @@ my $res=literpc({method=>"listunspent"});
 die "listunspent, error!" if !$res;
 exit 0 if !@$res;
 
-my $st=$db->prepare("select dest, fee, donate, callback min_forward from monitor where input=?");
+my $st=$db->prepare("select dest, fee, donate, cburl, min_forward from monitor where input=?");
 
 my %send;
 for my $tx (@$res) {
     $st->execute($tx->{address});
-    my ($dest, $fee) = $st->fetchrow_array();
+    my ($dest, $fee, $donate, $cburl, $min_forward) = $st->fetchrow_array();
     next unless $dest;
     push @{$send{$dest}->{txin}}, {txid=>$tx->{txid}, vout=>$tx->{vout}, scriptPubKey=>$tx->{scriptPubKey}};
     $send{$dest}->{amt}+=$tx->{amount};
     $send{$dest}->{fee}=$fee+0;
     $send{$dest}->{donate}=$donate+0;
-    push @{$send{$dest}->{from}}, {addr=>$tx->{address}, amt=>$tx->{amount}, callback=>$tx->{callback}};
+    push @{$send{$dest}->{from}}, {addr=>$tx->{address}, amt=>$tx->{amount}, callback=>$cburl};
 }
 
 open OUT, ">>$HOME/log/dbx.log" or die "Can't open callback dbx.log\n";
@@ -42,8 +42,9 @@ for my $dest (keys(%send)) {
         eval {
             $db->begin_work;
             for (@{$send{$dest}->{from}}) {
-                next if $_->{callback}=~/^poll:/;
-                $db->do("insert into cbs (txid, utime, input, amount, state) values (?, ?, ?, ?, 0)", undef, $res, time(), $_->{addr}, $prorate_pct * $_->{amt});
+                my $state = 0;
+                $state = 2 if $_->{callback}=~/^poll:/;
+                $db->do("insert into cbs (txid, utime, input, amount, state) values (?, ?, ?, ?, ?)", undef, $res, time(), $_->{addr}, $prorate_pct * $_->{amt}, $state);
             }
             $db->commit;
         };
