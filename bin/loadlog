@@ -16,6 +16,7 @@ while (<IN>) {
     my $utime=$dat->{utime};
     $db->begin_work;
     for (@{$dat->{input}}) {
+        next if $_->{callback} =~ /^poll:/;
         $db->do("insert into cbs (txid, utime, input, amount, state) values (?, ?, ?, ?, 0)", undef, $txid, time(), $_->{addr}, $prorate_pct * $_->{amt});
     }
     $db->commit;

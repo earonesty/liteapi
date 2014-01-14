@@ -31,8 +31,9 @@ valid("address");
 valid("callback");
 
 if ($p{callback} !~ /$RE{URI}{HTTP}{-scheme=>'https'}/) {
-    error("Callback must be a valid https:// url");
-};
+if ($p{callback} !~ /^poll:/) {
+    error("Callback must be a valid https:// url or poll: url");
+}}
 
 if (!LiteAPI::litevalidaddr($p{address})) {
     error("Invalid litecoin address");

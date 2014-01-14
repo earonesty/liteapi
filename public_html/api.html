@@ -8,7 +8,7 @@
 
 <h1><a href="/">LiteAPI</a> Receive Payments Documentation</h1>
 
-This API is designed to be compatible with the BitCoin Receive Payments API at blockchain.info, so sites that accept BitCoin can easily add LiteCoin support.  You will need a Litecoin address to use this API.   This is the address where transactions will be forwarded to.
+This API is designed to be compatible with the BitCoin Receive Payments API at blockchain.info, so sites that accept BitCoin can easily add Litecoin support.  You will need a Litecoin address to use this API.   This is the address where transactions will be forwarded to.
 
 <h3>Request an Address</h3>
 
@@ -18,7 +18,12 @@ The minimum supported transaction size is 0.01 LTC.
 
 <p><b>https://liteapi.org/receive?method=create&amp;address=$receiving_address&amp;callback=$callback_url</b>
 
-<p> The "address" is your receiving address where transactions are forwarded.   The "callback" is a url which will get GET requests (max 255 characters), and should include identifying parameters, like invoice numbers.
+<p> 
+
+<ul>
+    <li>"address" - your receiving address where transactions are forwarded.   
+    <li>"callback" - is a url which will get GET requests (max 255 characters), and should include identifying parameters, like invoice numbers.
+</ul>
 
 <p> There are some optional parameters that are not documented in the BitCoin version, but are supported here.
 <ul> 
@@ -30,11 +35,13 @@ The minimum supported transaction size is 0.01 LTC.
 
 <p>Your application should support https:// (encrypted) urls.  You don't want someone intercepting, guessing secrets, etc.
 
+<p>POLLING SYNTAX: If you want to POLL for results, use a poll:// URL.   You will not receive any callbacks, but you can always poll for transactions (see below for polling, and why this is helpful).
+
 <p> If min_forward is set, then transactions will "build up" until one is large enough to go out.   Otherwise every transaction will get forwarded (vin=vout).  If you're planning on getting lots of small confirmations, raise the network fee, because the transaction will be large.   
 
 <p> If no fee is specified, then the current forwarding rate will be assumed and 0.001 LTC will be deducted from transactions to be paid to the network (not to us).  Yes, you can use fee=0 to specify zero fee.  Results at your own risk (<a href="https://litecoin.info/Transaction_fees">read more about network fees here</a>).
 
-<p> Your application should enclude a "secret" of some sort for verification.
+<p> Your application should include a "secret" of some sort for verification.
 
 <h4>PHP Example:</h4>
 <div class=code>$secret = 'ZzsMLGKe162CfA5EcG6j'
@@ -48,8 +55,7 @@ echo 'Send Payment To : ' . $object-&gt;input_address;
 </div>
 
 <h4>Example Response: (JSON)</h4>
-<div class=code>
-{
+<div class=code>{
    "callback_url" : "https://liteapi.org/test.cgi",
    "destination" : "LfhypUihHE89uL3A7nKncHVoQBDLujCiSE",
    "donation" : 0,
@@ -87,8 +93,7 @@ echo 'Send Payment To : ' . $object-&gt;input_address;
 In order to acknowledge successful processing of the callback the server should respond with the text "*ok*". If the server responds with anything else the callback will be resent again every new block (approximately every 2.5 minutes) up to 4000 times (1 week).
 
 <h4>PHP Example</h4>
-<div class=code>
-$real_secret = 'ZzsMLGKe162CfA5EcG6j'
+<div class=code>$real_secret = 'ZzsMLGKe162CfA5EcG6j'
 $invoice_id = $_GET['invoice_id']; //invoice_id is past back to the callback URL
 $transaction_hash = $_GET['transaction_hash'];
 $input_address = $_GET['input_address'];
@@ -116,11 +121,21 @@ if($database->queryExec($query, $error)) {
 //Select the amount paid into an invoice with select SUM(value) as value from invoice_payments where invoice_id = $invoice_id
 </div>
 
+<h3>Poll For Results</h3>
+
+<p>It's possible to query liteapi for a callback list, or simply query for the total address balance at any time.  In this way, it's possible to build a litecoin payment system entirely in javascript.
+
+
+<h3>Security</h3>
+The callback url should contain a secret key which is known only to the API user.  It should also be an https: url.  In this way no one can forge a callback.
+
+<h3>Receive Callbacks</h3>
+
 <h3>Currency Conversion</h3>
 
 TODO: Use our Exchange Rates API to convert values in local currencies to LTC.
 
-If you would like convert payments received in Litecoin to to fiat currency quickly use a litecoin address from an exchange wallet with an "autosell" feature.
+If you would like convert payments received in Litecoin to to fiat currency quickly use a litecoin address from an exchange wallet with an "autosell" feature, such as Cryptsy.
 
  
 <p>
