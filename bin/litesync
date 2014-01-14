@@ -7,7 +7,7 @@ for x in `cat $HOME/etc/apihosts`; do
     for y in $@; do
     (
         y=`readlink -f $y`
-        rsync "$1" $x:$y 2>&1 | perl -pe "s/^/$x\t/"
+        rsync -a "$1" $x:$y 2>&1 | perl -pe "s/^/$x\t/"
     )
     done
 ) &
