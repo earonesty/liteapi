@@ -18,14 +18,14 @@ my %p = $q->Vars;
 use DBI;
 my $db = litedb();
 
-valid("cburl");
+valid("callback");
 valid("confirm",  gt=>0, okempty=>1);
 
 
 my $res=$db->prepare("select txid, utime as utime, cbs.input, amount, monitor.dest, conf from cbs 
     inner join monitor on cbs.input=monitor.input where cburl=?");
 
-$res->execute($p{cburl});
+$res->execute($p{callback});
 
 my %r;
 
