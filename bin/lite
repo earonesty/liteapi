@@ -2,6 +2,7 @@
 
 HOME=`dirname $0`/..
 cd $HOME
+PATH=$PATH:/usr/local/bin
 
 if [ -n "$1" ]; then
 	litecoind -datadir=coin -conf=lite.conf -pid=etc/lite.pid "$@"
