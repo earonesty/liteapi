@@ -3,4 +3,4 @@ Something like this:
 git clone the repo into /var/www/liteapi
 run bin/setup-clone.sh
 
-TBD:  make it real
+TBD:  make a real installer
