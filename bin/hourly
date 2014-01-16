@@ -2,4 +2,8 @@
 
 cd /var/www/liteapi
 exec >> log/hourly.log 2>&1
-bin/start-lite
+
+coin/debug.log
+
+# reset if needed?
+[ "`find coin/debug.log -mmin +20`" ] && bin/start-lite

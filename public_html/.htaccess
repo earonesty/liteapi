@@ -2,7 +2,8 @@ RewriteEngine On
 RewriteCond %{HTTPS} !=on
 RewriteRule ^/?(.*) https://%{SERVER_NAME}/$1 [R,L]
 
-<FilesMatch "receive|ticker|toltc|poll|status">
+<FilesMatch "receive|ticker|toltc|poll|status|tocoin">
+    Header set Access-Control-Allow-Origin "*"
     SetHandler perl-script
     PerlResponseHandler ModPerl::Registry
     PerlOptions +ParseHeaders

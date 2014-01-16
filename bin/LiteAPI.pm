@@ -131,6 +131,36 @@ sub burp {
     rename("$f.tmp", $f);
 }
 
+sub cache_price {
+    my ($coin, $cur) = @_;
+    my $dat;
+    my $tick="$HOME/log/cur";
+    mkdir $tick;
+
+    $coin=lc($coin);
+    $cur=lc($cur);
+
+    die unless $coin=~/btc|ltc/;
+    die unless $cur=~/usd|eur|rur/;
+
+    $tick="$tick/$coin.$cur";
+
+    if (((stat($tick))[9])<time()-30) {
+        my $ua = LWP::UserAgent->new;
+        $ua->timeout(10);
+        my $res=$ua->get("https://btc-e.com/api/2/${coin}_$cur/ticker");
+        if ($res->is_success) {
+            $dat=from_json($res->decoded_content());
+            $dat=$dat->{ticker};
+            open(FILE, ">:encoding(UTF-8)", "$tick.$$");
+            print FILE to_json($dat);
+            close FILE;
+            rename("$tick.$$", $tick);
+            return $dat;
+        }
+    }
+    return from_json(slurp($tick));
+}
 
 sub cache_ticker {
     my $dat;
