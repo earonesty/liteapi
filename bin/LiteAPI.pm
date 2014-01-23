@@ -99,28 +99,6 @@ sub litedb {
 	return DBI->connect("DBI:Pg:dbname=lite;host=127.0.0.1", "lite", $DBPW, {'RaiseError' => 1});
 }
 
-sub process_callback {
-	my ($d) = @_;
-	if (my $url=$d->{callback}) {
-		croak unless $d->{cmd};
-		croak unless $d->{amt};
-		croak unless $d->{txid};
-
-		delete $d->{callback};
-		my $query=complex_to_flat($d);
-		if ($url=~/\?/) {
-			$url.="&";
-		} else {
-			$url.="?";
-		}
-		$url.=$query;
-		my $resp=$ua->get("$url");
-		if ($resp->decoded_content=~/\*ok\*/) {
-			litedb()->do("update tx set cbstate=? where id=?", undef, $d->{cmd}, $d->{txid});
-		}
-	}
-}
-
 sub Dumper {to_json(@_>1?[@_]:$_[0],{allow_nonref=>1,pretty=>1,canonical=>1,allow_blessed=>1});}
 
 sub burp {
