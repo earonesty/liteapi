@@ -69,7 +69,11 @@ sub xlog {
     print LOG time(), "\t", $params, "\t", $code, "\t", $content, "\n";
     close LOG;
     if ($debug) {
-        warn "url: $url, input: $params, code: $code, content: $content\n";
+    my $cburl=$url;
+        $cburl .= "&" if $cburl =~ /\?/;
+        $cburl .= "?" if $cburl !~ /\?/;
+        $cburl .= $params;
+        warn "url: $cburl, code: $code, content: $content\n";
     }
 }
 
