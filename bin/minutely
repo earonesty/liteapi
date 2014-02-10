@@ -8,10 +8,11 @@ bin/lite getinfo > etc/lite.info 2>&1
 # this could be moved to the "onblock" callback from the dameon... but whatever for now
 
 # simple status file shows current success codes for all minutely jobs 
-echo time:`date +%s` > etc/lite.status
+echo time:`date +%s` > etc/lite.status.new
 avail=`df . | perl -ne 'print $1 if /\S+\s+\d+\s+\S+\s+(\d+)/'`
-echo "avail:$avail" >> etc/lite.status
-bin/forward && echo forward:1 >> etc/lite.status             # forward transactions, add to db
-bin/callback && echo callback:1 >> etc/lite.status            # hit some urls
-bin/loadlog && echo loadlog:1 >> etc/lite.status             # in case db was down, load from log
-bin/repair && echo repair:1 >> etc/lite.status              # in case log didn't work, use the blockchain
+echo "avail:$avail" >> etc/lite.status.new
+bin/forward && echo forward:1 >> etc/lite.status.new             # forward transactions, add to db
+bin/callback && echo callback:1 >> etc/lite.status.new            # hit some urls
+bin/loadlog && echo loadlog:1 >> etc/lite.status.new             # in case db was down, load from log
+bin/repair && echo repair:1 >> etc/lite.status.new              # in case log didn't work, use the blockchain
+mv -f etc/lite.status.new etc/lite.status
