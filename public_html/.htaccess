@@ -9,4 +9,5 @@ RewriteRule ^/?(.*) https://%{SERVER_NAME}/$1 [R,L]
     PerlOptions +ParseHeaders
     Options +ExecCGI
 </FilesMatch>
+
 ErrorDocument 500 " "
