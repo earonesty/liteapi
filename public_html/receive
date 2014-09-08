@@ -31,10 +31,12 @@ valid("address");
 valid("callback");
 
 if ($p{callback} !~ /$RE{URI}{HTTP}{-scheme=>'https'}/) {
+if ($p{callback} !~ /$RE{URI}{HTTP}{-scheme=>'http'}/) {
 if ($p{callback} !~ m{^(poll:[a-z0-9._~!$&'()*+,;=:/\?@%-]+)$}) {
     error("Callback must be a valid https:// url or poll: url");
 } else {
     $p{callback} = $1;
+}
 }
 }
 
